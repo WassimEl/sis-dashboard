@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Siskath Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #0a0414; color: #e0b0d0; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; font-family: inherit; }
+    .btn-primary { background: #ff2d78; color: white; box-shadow: 0 0 10px #ff2d7844; }
+    .btn-primary:hover { background: #ff4d98; transform: translateY(-2px); box-shadow: 0 0 20px #ff2d78; }
+    .btn-danger { background: transparent; color: #ff8888; border: 1px solid #5a3030; }
+    .btn-danger:hover { background: #ff2d2d1a; }
+    .btn-success { background: #10b981; color: white; }
+    .btn-success:hover { background: #059669; transform: translateY(-2px); }
+    .btn-ghost { background: transparent; color: #aa88aa; border: 1px solid #2a1530; }
+    .btn-ghost:hover { background: #ff2d7818; color: #ff2d78; }
+    .btn-sm { padding: 5px 12px; font-size: 11px; }
+    .btn-full { width: 100%; }
+    
+    .card { background: linear-gradient(135deg, #120a20, #0a0414); border: 1px solid #2a1530; border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+    input, textarea, select { background: #0a0318; border: 1px solid #2a1530; border-radius: 12px; color: #e0b0d0; padding: 10px 14px; font-size: 13px; width: 100%; outline: none; margin-bottom: 12px; }
+    input:focus, textarea:focus, select:focus { border-color: #ff2d78; }
+    label { color: #aa88aa; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #0a0318; border: 1px solid #2a1530; border-radius: 16px; padding: 14px; text-align: center; }
+    .stat-value { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 900; }
+    .stat-label { font-size: 10px; color: #886699; margin-top: 5px; }
+    
+    .xp-bar { height: 6px; background: #0a0314; border-radius: 3px; overflow: hidden; margin: 8px 0; }
+    .xp-fill { height: 100%; background: linear-gradient(90deg, #ff2d7899, #ff2d78); width: 0%; border-radius: 3px; transition: width 0.6s; }
+    
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; background: #ff2d7818; color: #ff2d78; border: 1px solid #ff2d7844; }
+    
+    .history-item { display: flex; align-items: center; gap: 12px; padding: 10px; border-bottom: 1px solid #2a1530; cursor: pointer; }
+    .history-item:hover { background: #0e0618; border-radius: 12px; }
+    
+    .game-image { width: 50px; height: 50px; border-radius: 12px; object-fit: cover; background: #2a1530; }
+    
+    .chart-container { margin: 20px 0; width: 100%; overflow-x: auto; }
+    .chart-bars { display: flex; align-items: flex-end; gap: 12px; height: 180px; padding: 10px 0; }
+    .chart-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .chart-bar { width: 100%; background: #2a1530; border-radius: 8px 8px 0 0; transition: height 0.5s ease; min-height: 4px; }
+    .chart-bar-fill { width: 100%; height: 100%; border-radius: 8px 8px 0 0; }
+    .chart-label { font-size: 10px; color: #886699; text-align: center; margin-top: 8px; }
+    .chart-value { font-size: 11px; font-weight: bold; margin-bottom: 4px; background: #0a0318; padding: 2px 6px; border-radius: 10px; }
+    
+    .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
+    .modal-content { background: linear-gradient(135deg, #1a0a30, #0a0414); border: 2px solid #ff2d78; border-radius: 24px; padding: 30px; max-width: 400px; width: 90%; text-align: center; }
+    .modal-img { width: 200px; height: 200px; border-radius: 20px; object-fit: cover; margin: 20px 0; }
+    
+    .challenge-card { background: linear-gradient(135deg, #1a1030, #0a0418); border: 1px solid #ffd70044; border-radius: 16px; padding: 15px; margin-bottom: 12px; }
+    .challenge-completed { opacity: 0.6; border-color: #10b98144; }
+    
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+    .calendar-day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0318; border-radius: 12px; font-size: 11px; padding: 8px; cursor: pointer; }
+    .calendar-day.has-run { border: 1px solid #ff8c42; }
+    .calendar-day.has-stream { border: 1px solid #a855f7; }
+    .calendar-day.today { background: #ff2d7822; border: 1px solid #ff2d78; }
+    
+    .stat-detail { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2a1530; }
+    
+    .japanese-selector { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+    .japanese-type { padding: 5px 12px; border-radius: 20px; background: #0a0318; cursor: pointer; font-size: 12px; }
+    .japanese-type.active { background: #ff2d78; color: white; }
+    .japanese-word { font-size: 32px; text-align: center; margin: 10px 0; font-family: 'Courier New', monospace; }
+    .japanese-hidden { filter: blur(5px); cursor: pointer; transition: filter 0.3s; }
+    .japanese-hidden:hover { filter: blur(0); }
+    
+    .slot-machine { background: linear-gradient(145deg, #1a0a30, #0a0418); border-radius: 24px; padding: 30px; text-align: center; border: 2px solid #ff2d7844; margin-bottom: 20px; }
+    .slot-reel { background: #0a0318; border-radius: 20px; padding: 30px; margin: 20px 0; border: 2px solid #ff2d78; cursor: pointer; transition: all 0.3s; }
+    .slot-reel.spinning { animation: slotShake 0.1s infinite; }
+    @keyframes slotShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    .game-name { font-size: 28px; font-weight: 900; font-family: 'Cinzel', serif; }
+    .game-img { width: 120px; height: 120px; border-radius: 16px; object-fit: cover; margin-top: 15px; }
+    
+    .footer { text-align: center; padding: 20px; font-size: 11px; color: #664466; border-top: 1px solid #2a1530; margin-top: 30px; }
+    
+    .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a0a30; border: 1px solid #ff2d7866; border-radius: 12px; padding: 12px 24px; color: #ff9ec8; font-size: 13px; z-index: 9999; animation: fadeInUp 0.3s ease; white-space: nowrap; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    
+    .desktop-layout { display: flex; max-width: 1400px; margin: 0 auto; gap: 30px; padding: 30px; }
+    .sidebar { width: 320px; flex-shrink: 0; }
+    .main-content { flex: 1; }
+    
+    .position-relative { position: relative; }
+    .suggestions-list { position: absolute; top: 100%; left: 0; right: 0; background: #0a0318; border: 1px solid #2a1530; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; }
+    .suggestion-item { padding: 10px 14px; cursor: pointer; transition: background 0.2s; }
+    .suggestion-item:hover { background: #ff2d7822; }
+    
+    .wheel-result { text-align: center; padding: 30px; background: linear-gradient(135deg, #1a0a30, #0a0418); border-radius: 20px; margin-bottom: 20px; }
+    .reward-list { max-height: 250px; overflow-y: auto; }
+    
+    @media (max-width: 768px) {
+      .desktop-only { display: none !important; }
+      .sidebar { width: 100%; }
+      .desktop-layout { flex-direction: column; padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .chart-bars { height: 140px; gap: 6px; }
+      .mobile-header { background: #0a0318; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a1530; position: sticky; top: 0; z-index: 100; }
+      .mobile-nav { display: flex; background: #0a0318; border-bottom: 1px solid #2a1530; overflow-x: auto; position: sticky; top: 60px; z-index: 99; }
+      .mobile-nav button { padding: 12px 16px; background: none; border: none; color: #886699; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+      .mobile-nav button.active { color: #ff2d78; border-bottom: 2px solid #ff2d78; }
+      .mobile-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #0a0318; border-top: 1px solid #2a1530; display: flex; z-index: 100; padding: 8px 0; }
+      .mobile-bottom-nav button { flex: 1; padding: 8px; background: none; border: none; text-align: center; cursor: pointer; }
+      .mobile-bottom-nav .active .nav-icon { color: #ff2d78; transform: scale(1.1); }
+      .nav-icon { font-size: 24px; display: block; }
+      .nav-label { font-size: 10px; margin-top: 4px; color: #886699; }
+      .mobile-bottom-nav .active .nav-label { color: #ff2d78; }
+    }
+    @media (min-width: 769px) { .mobile-only { display: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script>
+    // ==================== VERSION ====================
+    const APP_VERSION = '2.7.0';
+    const APP_BUILD_DATE = '2026-04-30';
+    const RAWGG_API_KEY = '346adb8ac9fc444989a53b8b7256a277';
+    const STORAGE_KEY = 'siskath_v17';
+    const FIRST_USE_KEY = 'siskath_first_use_v2';
+
+    // ==================== JAPONAIS ====================
+    const JAPANESE_DB = {
+      hiragana: [
+        { jp: "こんにちは", reading: "Kon'nichiwa", meaning: "Bonjour" },
+        { jp: "ありがとう", reading: "Arigatō", meaning: "Merci" },
+        { jp: "すみません", reading: "Sumimasen", meaning: "Excusez-moi" },
+        { jp: "お願いします", reading: "Onegaishimasu", meaning: "S'il vous plaît" },
+        { jp: "はい", reading: "Hai", meaning: "Oui" },
+        { jp: "いいえ", reading: "Iie", meaning: "Non" },
+        { jp: "頑張って", reading: "Ganbatte", meaning: "Bon courage" },
+        { jp: "おやすみ", reading: "Oyasumi", meaning: "Bonne nuit" },
+        { jp: "おはよう", reading: "Ohayō", meaning: "Bonjour (matin)" },
+        { jp: "こんばんは", reading: "Konbanwa", meaning: "Bonsoir" }
+      ],
+      katakana: [
+        { jp: "ゲーム", reading: "Gēmu", meaning: "Jeu" },
+        { jp: "ストリーマー", reading: "Sutorīmā", meaning: "Streameuse" },
+        { jp: "ランニング", reading: "Ranningu", meaning: "Course" },
+        { jp: "ドクター", reading: "Dokutā", meaning: "Docteur" },
+        { jp: "ハート", reading: "Hāto", meaning: "Cœur" },
+        { jp: "エナジー", reading: "Enajī", meaning: "Énergie" },
+        { jp: "スマイル", reading: "Sumairu", meaning: "Sourire" },
+        { jp: "フレンド", reading: "Furendo", meaning: "Ami" }
+      ],
+      kanji: [
+        { jp: "今日", reading: "Kyō", meaning: "Aujourd'hui" },
+        { jp: "明日", reading: "Ashita", meaning: "Demain" },
+        { jp: "頑張る", reading: "Ganbaru", meaning: "Persévérer" },
+        { jp: "素晴らしい", reading: "Subarashii", meaning: "Magnifique" },
+        { jp: "感動", reading: "Kandō", meaning: "Émotion" },
+        { jp: "尊敬", reading: "Sonkei", meaning: "Respect" },
+        { jp: "無限", reading: "Mugen", meaning: "Infini" },
+        { jp: "永遠", reading: "Eien", meaning: "Éternité" }
+      ]
+    };
+
+    // ==================== DONNÉES ====================
+    const DEFAULT_DATA = {
+      settings: {
+        username: '', realName: '', twitchUrl: '',
+        followerGoal: 500, currentFollowers: 0, runGoal: 100,
+        accentColor: '#ff2d78', companionName: '',
+        japaneseType: 'kanji', showJapaneseAnswer: false
+      },
+      companion: {
+        level: 1, xp: 0, xpToNext: 100, mood: 'happy',
+        lastLogin: null, stats: { endurance: 0, charisma: 0, energy: 0 },
+        evolution: 0, totalDaysLoggedIn: 0, lastMessage: "Prête pour l'aventure !"
+      },
+      runs: [], streams: [], gameHistory: [],
+      completedChallenges: [], lastChallengeReset: new Date().toISOString().split('T')[0],
+      coachMessages: [], usedGameIds: [], rewardList: null
+    };
+
+    // Récompenses par défaut
+    const DEFAULT_REWARDS = [
+      { name: "🎁 Bonus XP +5", value: 5, type: "xp" },
+      { name: "🏃 Fais 10 pompes", value: "pushups", type: "action" },
+      { name: "🎮 Joue à un jeu au hasard", value: "game", type: "action" },
+      { name: "🎤 Fais un beatbox", value: "beatbox", type: "action" },
+      { name: "📖 Raconte une blague", value: "joke", type: "action" },
+      { name: "💪 15 squats", value: "squats", type: "action" },
+      { name: "🍿 Regarde ton clip préféré", value: "clip", type: "action" },
+      { name: "🎵 Chante une chanson", value: "sing", type: "action" },
+      { name: "🎨 Dessine un emot", value: "draw", type: "action" },
+      { name: "📝 Fais un live just chatting", value: "justchatting", type: "action" },
+      { name: "🕹️ Speedrun 5min", value: "speedrun", type: "action" },
+      { name: "🎲 Laisse le chat choisir le jeu", value: "chatpick", type: "action" }
+    ];
+
+    // ==================== FONCTIONS ====================
+    function today() { return new Date().toISOString().split('T')[0]; }
+    
+    function getWeekNumber() {
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+      const week1 = new Date(d.getFullYear(), 0, 4);
+      return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+    }
+
+    function getRandomPhrase() {
+      const phrases = [
+        "🏃 J'ai hâte de te voir courir !", "🏃‍♀️ Capteur cardiaque prêt ?", "🏃 Tu vas battre ton record !",
+        "🩺 Les urgences t'appellent docteur !", "🩺 Sauver des vies, ton pouvoir !",
+        "🎮 Twitch t'attend ce soir !", "🎮 Tes viewers t'adorent !", "🎮 Prête pour le live !",
+        "🎲 Un petit jeu ce soir ?", "🎲 Let's play !",
+        "🇯🇵 今日も頑張ろう！", "🇯🇵 日本語を勉強しよう！",
+        "✨ Prête pour l'aventure !", "✨ Tu es la meilleure !"
+      ];
+      return phrases[Math.floor(Math.random() * phrases.length)];
+    }
+
+    function getMoodEmoji(c) { return c.mood === 'excited' ? '😊' : c.mood === 'sad' ? '😢' : '😐'; }
+
+    function addXP(companion, amount, stat) {
+      const updated = { ...companion, stats: { ...companion.stats } };
+      updated.xp += amount;
+      if (stat) updated.stats[stat] = (updated.stats[stat] || 0) + amount;
+      while (updated.xp >= updated.xpToNext) {
+        updated.xp -= updated.xpToNext;
+        updated.level += 1;
+        updated.xpToNext = Math.floor(updated.xpToNext * 1.45);
+        updated.evolution = Math.min(Math.floor((updated.level - 1) / 5), 3);
+      }
+      updated.mood = 'excited';
+      updated.lastMessage = getRandomPhrase();
+      return updated;
+    }
+
+    function getRandomJapanese(type, showAnswer) {
+      const lessons = JAPANESE_DB[type] || JAPANESE_DB.kanji;
+      const random = lessons[Math.floor(Math.random() * lessons.length)];
+      return { ...random, showAnswer: showAnswer };
+    }
+
+    function getCoachAdvice(data) {
+      const totalKm = data.runs.reduce((a, r) => a + r.distance, 0);
+      const totalStreams = data.streams.length;
+      if (totalKm === 0 && totalStreams === 0) return "✨ Bienvenue ! Enregistre ton premier run ou stream !";
+      if (totalKm === 0) return "🏃 Pour commencer, essaye de courir 1 km aujourd'hui !";
+      if (totalKm < 10) return "🏃 Tu as déjà parcouru " + totalKm.toFixed(1) + " km !";
+      if (totalStreams === 0) return "🎮 Lance ton premier stream !";
+      return "💪 Continue comme ça !";
+    }
+
+    function formatPace(d, dur) { if (!d || !dur) return '—'; return (dur / d).toFixed(1); }
+
+    // ==================== GRAPHIQUES ====================
+    function renderRunChart(runs) {
+      if (!runs || runs.length === 0) return '<div style="text-align: center; padding: 40px;">📊 Pas assez de données</div>';
+      const last7 = [...runs].slice(-7);
+      const max = Math.max(...last7.map(r => r.distance), 1);
+      return `<div class="chart-container"><div class="chart-bars">${last7.map(r => { const h = Math.min((r.distance / max) * 150, 150); return `<div class="chart-bar-item"><div class="chart-value" style="color:#ff8c42;">${r.distance.toFixed(1)} km</div><div class="chart-bar" style="height:${h}px;"><div class="chart-bar-fill" style="height:100%; background:linear-gradient(180deg,#ff8c42,#ffaa66);"></div></div><div class="chart-label">${r.date.slice(5)}</div></div>`; }).join('')}</div></div>`;
+    }
+
+    function renderStreamChart(streams) {
+      if (!streams || streams.length === 0) return '<div style="text-align: center; padding: 40px;">📊 Pas assez de données</div>';
+      const last7 = [...streams].slice(-7);
+      const max = Math.max(...last7.map(s => s.viewers * (s.duration / 60)), 1);
+      return `<div class="chart-container"><div class="chart-bars">${last7.map(s => { const score = s.viewers * (s.duration / 60); const h = Math.min((score / max) * 150, 150); return `<div class="chart-bar-item"><div class="chart-value" style="color:#a855f7;">${score.toFixed(0)}</div><div class="chart-bar" style="height:${h}px;"><div class="chart-bar-fill" style="height:100%; background:linear-gradient(180deg,#a855f7,#c87dfa);"></div></div><div class="chart-label">${s.date.slice(5)}</div></div>`; }).join('')}</div></div>`;
+    }
+
+    // ==================== API RAWGG ====================
+    let gameCache = [], usedGameIndices = [];
+
+    async function fetchAllGames() {
+      if (gameCache.length > 0) return gameCache;
+      const allGames = [];
+      for (let page = 1; page <= 8; page++) {
+        try {
+          const res = await fetch(`https://api.rawg.io/api/games?key=${RAWGG_API_KEY}&page=${page}&page_size=40`);
+          const data = await res.json();
+          if (data.results) allGames.push(...data.results);
+          await new Promise(r => setTimeout(r, 100));
+        } catch(e) {}
+      }
+      const unique = [];
+      const seen = new Set();
+      for (const g of allGames) {
+        if (!seen.has(g.id)) {
+          seen.add(g.id);
+          unique.push({ name: g.name, image: g.background_image, id: g.id });
+        }
+      }
+      gameCache = unique;
+      return gameCache;
+    }
+
+    async function getRandomGame() {
+      const games = await fetchAllGames();
+      if (games.length === 0) return { name: "The Witcher 3", image: null };
+      if (usedGameIndices.length >= games.length) usedGameIndices = [];
+      let available = [];
+      for (let i = 0; i < games.length; i++) if (!usedGameIndices.includes(i)) available.push(i);
+      if (available.length === 0) available = games.map((_, i) => i);
+      const idx = available[Math.floor(Math.random() * available.length)];
+      usedGameIndices.push(idx);
+      if (usedGameIndices.length > 50) usedGameIndices.shift();
+      return games[idx];
+    }
+
+    async function searchGameOnRAWGG(q) {
+      try {
+        const res = await fetch(`https://api.rawg.io/api/games?key=${RAWGG_API_KEY}&search=${encodeURIComponent(q)}&page_size=5`);
+        const data = await res.json();
+        return data.results.map(g => ({ name: g.name, image: g.background_image }));
+      } catch(e) { return []; }
+    }
+
+    // ==================== STOCKAGE ====================
+    function loadData() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            ...DEFAULT_DATA,
+            ...parsed,
+            settings: { ...DEFAULT_DATA.settings, ...(parsed.settings || {}) },
+            companion: { ...DEFAULT_DATA.companion, ...(parsed.companion || {}) },
+            runs: parsed.runs || [],
+            streams: parsed.streams || [],
+            gameHistory: parsed.gameHistory || [],
+            completedChallenges: parsed.completedChallenges || [],
+            coachMessages: parsed.coachMessages || [],
+            usedGameIds: parsed.usedGameIds || [],
+            rewardList: parsed.rewardList || null
+          };
+        }
+      } catch(e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+
+    function saveData(data) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {} }
+
+    function exportData() {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(globalData, null, 2)], { type: 'application/json' }));
+      a.download = `siskath_backup_${today()}.json`;
+      a.click();
+      showToast('💾 Données exportées !');
+    }
+
+    function importData(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try { updateGlobalData(JSON.parse(e.target.result)); showToast('📥 Import réussi !'); } catch(err) { showToast('❌ Fichier invalide'); }
+      };
+      reader.readAsText(file);
+    }
+
+    // ==================== DÉFIS ====================
+    const CHALLENGES = [
+      { id: 'run_10km', name: '🏃 10 km/semaine', target: 10, unit: 'km', type: 'run', xp: 50 },
+      { id: 'run_5days', name: '🏃 5 jours de course', target: 5, unit: 'jours', type: 'run_days', xp: 40 },
+      { id: 'stream_5h', name: '🎮 5h de stream', target: 300, unit: 'min', type: 'stream_duration', xp: 60 },
+      { id: 'stream_3games', name: '🎮 3 jeux différents', target: 3, unit: 'jeux', type: 'stream_games', xp: 45 },
+      { id: 'daily_bonus', name: '✨ Bonus 5x', target: 5, unit: 'fois', type: 'daily', xp: 30 }
+    ];
+
+    function checkChallengeCompletion(data) {
+      let updated = { ...data };
+      const week = getWeekNumber();
+      if (data.lastChallengeReset !== week.toString()) { updated.completedChallenges = []; updated.lastChallengeReset = week.toString(); }
+      const totalRun = data.runs.reduce((a, r) => a + r.distance, 0);
+      const runDays = new Set(data.runs.map(r => r.date)).size;
+      const totalStreamMin = data.streams.reduce((a, s) => a + s.duration, 0);
+      const uniqueGames = new Set(data.streams.map(s => s.game)).size;
+      const dailyCount = data.companion.totalDaysLoggedIn || 0;
+      for (const c of CHALLENGES) {
+        if (updated.completedChallenges.includes(c.id)) continue;
+        let completed = false;
+        switch(c.type) {
+          case 'run': completed = totalRun >= c.target; break;
+          case 'run_days': completed = runDays >= c.target; break;
+          case 'stream_duration': completed = totalStreamMin >= c.target; break;
+          case 'stream_games': completed = uniqueGames >= c.target; break;
+          case 'daily': completed = dailyCount >= c.target; break;
+        }
+        if (completed) {
+          updated.completedChallenges.push(c.id);
+          updated.companion = addXP({ ...updated.companion }, c.xp, 'energy');
+        }
+      }
+      return updated;
+    }
+
+    // ==================== CALENDRIER ====================
+    function buildCalendar(data) {
+      const d = new Date();
+      const month = d.getMonth(), year = d.getFullYear();
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const days = [];
+      const runDates = new Set(data.runs.map(r => r.date));
+      const streamDates = new Set(data.streams.map(s => s.date));
+      for (let i = 0; i < firstDay; i++) days.push(null);
+      for (let i = 1; i <= daysInMonth; i++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        days.push({ day: i, date: dateStr, hasRun: runDates.has(dateStr), hasStream: streamDates.has(dateStr), isToday: dateStr === today() });
+      }
+      return { days, month, year };
+    }
+
+    // ==================== LIVE ====================
+    let spinningWheel = false;
+    let currentReward = null;
+    
+    function getRewardList() {
+      if (globalData.rewardList && globalData.rewardList.length > 0) {
+        return globalData.rewardList;
+      }
+      return DEFAULT_REWARDS;
+    }
+
+    function saveRewardList(list) {
+      updateGlobalData({ ...globalData, rewardList: list });
+    }
+
+    function addReward() {
+      const input = document.getElementById('new-reward');
+      const name = input?.value.trim();
+      if (name) {
+        const newList = [...getRewardList(), { name: name, value: name, type: "custom" }];
+        saveRewardList(newList);
+        input.value = '';
+        showToast(`✨ Récompense "${name}" ajoutée !`);
+      }
+    }
+
+    function removeReward(index) {
+      const newList = getRewardList().filter((_, i) => i !== index);
+      saveRewardList(newList);
+      if (currentReward && currentReward.name === getRewardList()[index]?.name) {
+        currentReward = null;
+      }
+      showToast('🗑️ Récompense supprimée');
+    }
+
+    function spinWheel() {
+      if (spinningWheel) return;
+      spinningWheel = true;
+      
+      const wheelDiv = document.getElementById('wheel-result-display');
+      const rewardList = getRewardList();
+      if (rewardList.length === 0) {
+        showToast('⚠️ Ajoute des récompenses d\'abord !');
+        spinningWheel = false;
+        return;
+      }
+      
+      let spins = 0;
+      const interval = setInterval(() => {
+        const random = rewardList[Math.floor(Math.random() * rewardList.length)];
+        if (wheelDiv) wheelDiv.innerHTML = `
+          <div style="font-size: 48px; margin-bottom: 10px;">🎡</div>
+          <div style="font-size: 20px; animation: pulseRing 0.5s infinite;">${random.name}</div>
+        `;
+        spins++;
+        if (spins > 15) {
+          clearInterval(interval);
+          const final = rewardList[Math.floor(Math.random() * rewardList.length)];
+          currentReward = final;
+          if (wheelDiv) wheelDiv.innerHTML = `
+            <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+            <div style="font-size: 28px; font-weight: bold; color: #ffd700;">${final.name}</div>
+            <div style="font-size: 14px; margin-top: 10px; color: #aa88aa;">Défi en cours - relance la roue pour un nouveau défi !</div>
+          `;
+          if (final.type === 'xp') {
+            const newComp = addXP({ ...globalData.companion }, final.value, 'energy');
+            updateGlobalData({ ...globalData, companion: newComp });
+            showToast(`🎁 +${final.value} XP !`);
+          } else {
+            showToast(`🎡 Défi : ${final.name}`);
+          }
+          spinningWheel = false;
+        }
+      }, 80);
+    }
+
+    function resetWheelResult() {
+      currentReward = null;
+      const wheelDiv = document.getElementById('wheel-result-display');
+      if (wheelDiv) wheelDiv.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 10px;">🎡</div>
+        <div style="font-size: 16px; color: #886699;">Clique sur "Lancer" pour faire tourner la roue !</div>
+      `;
+      renderApp();
+    }
+
+    // ==================== RENDU ====================
+    let globalData = null, currentTab = 'run', toastMsg = '', toastTimer = null, isMobile = window.innerWidth < 768;
+    let spinning = false, lastPickedGame = null, selectedGameDetail = null, currentJapaneseLesson = null;
+
+    function showToast(msg) {
+      toastMsg = msg;
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { toastMsg = ''; renderApp(); }, 2500);
+      renderApp();
+    }
+
+    function updateGlobalData(newData) {
+      globalData = newData;
+      saveData(globalData);
+      renderApp();
+    }
+
+    async function spinGame() {
+      if (spinning) return;
+      spinning = true;
+      const reel = document.querySelector('.slot-reel');
+      if (reel) reel.classList.add('spinning');
+      await new Promise(r => setTimeout(r, 1500));
+      const game = await getRandomGame();
+      lastPickedGame = game;
+      const nameDiv = document.querySelector('.game-name');
+      const imgDiv = document.getElementById('game-img');
+      if (nameDiv) nameDiv.textContent = game.name;
+      if (imgDiv) { if (game.image) { imgDiv.src = game.image; imgDiv.style.display = 'block'; } else imgDiv.style.display = 'none'; }
+      if (reel) reel.classList.remove('spinning');
+      const newHistory = [{ name: game.name, image: game.image, date: today() }, ...(globalData.gameHistory || [])].slice(0, 50);
+      updateGlobalData({ ...globalData, gameHistory: newHistory });
+      showToast(`🎮 ${game.name} !`);
+      spinning = false;
+    }
+
+    window.handleGameInput = async function(v) {
+      const div = document.getElementById('stream-suggestions');
+      if (!div) return;
+      if (v.length < 2) { div.style.display = 'none'; return; }
+      const existing = [...new Set((globalData.streams || []).map(s => s.game))];
+      const matches = existing.filter(g => g.toLowerCase().includes(v.toLowerCase())).slice(0, 5);
+      if (matches.length) {
+        div.innerHTML = matches.map(m => `<div class="suggestion-item" onclick="selectGameSuggestion('${m.replace(/'/g, "\\'")}')">${m}</div>`).join('');
+        div.style.display = 'block';
+      } else {
+        const api = await searchGameOnRAWGG(v);
+        if (api.length) {
+          div.innerHTML = api.map(g => `<div class="suggestion-item" onclick="selectGameSuggestion('${g.name.replace(/'/g, "\\'")}')">${g.name}</div>`).join('');
+          div.style.display = 'block';
+        } else div.style.display = 'none';
+      }
+    };
+
+    window.selectGameSuggestion = function(name) {
+      const input = document.getElementById('stream-game');
+      const div = document.getElementById('stream-suggestions');
+      if (input) input.value = name;
+      if (div) div.style.display = 'none';
+    };
+
+    // ==================== RENDU DES COMPOSANTS ====================
+    function renderSidebar(accent, xpPercent, dailyBonusDone) {
+      const c = globalData.companion;
+      const showA = globalData.settings.showJapaneseAnswer;
+      return `
+        <div class="sidebar">
+          <div class="card" style="text-align:center;">
+            <div style="font-size:64px;">${getMoodEmoji(c)}</div>
+            <div style="font-family:'Cinzel';font-size:18px;color:${accent};">${globalData.settings.companionName || 'Compagnon'}</div>
+            <div class="badge" style="margin:10px 0;">Niveau ${c.level}</div>
+            <p style="font-size:13px;margin:10px 0;">"${c.lastMessage}"</p>
+            <div class="xp-bar"><div class="xp-fill" style="width:${xpPercent}%;"></div></div>
+            <div style="font-size:11px;">${c.xp}/${c.xpToNext} XP</div>
+            <button class="btn ${dailyBonusDone ? 'btn-danger' : 'btn-primary'}" data-action="bonus" style="width:100%;margin-top:10px;">${dailyBonusDone ? '✅ Bonus réclamé' : '🎁 Bonus quotidien +15 XP'}</button>
+          </div>
+          <div class="card"><div style="font-weight:bold;">📊 Stats</div>
+            <div><span>🏃 Endurance</span> <span style="float:right;color:#ff8c42;">${c.stats.endurance}</span></div><div style="height:4px;background:#0a0314;margin:5px 0 12px;"><div style="width:${Math.min(c.stats.endurance/5,100)}%;height:4px;background:#ff8c42;"></div></div>
+            <div><span>🎤 Charisme</span> <span style="float:right;color:#a855f7;">${c.stats.charisma}</span></div><div style="height:4px;background:#0a0314;margin:5px 0 12px;"><div style="width:${Math.min(c.stats.charisma/5,100)}%;height:4px;background:#a855f7;"></div></div>
+            <div><span>⚡ Énergie</span> <span style="float:right;color:${accent};">${c.stats.energy}</span></div><div style="height:4px;background:#0a0314;margin:5px 0;"><div style="width:${Math.min(c.stats.energy/5,100)}%;height:4px;background:${accent};"></div></div>
+          </div>
+          <div class="card"><div style="font-weight:bold;">🤖 Coach</div><p style="font-size:13px;font-style:italic;">"${globalData.coachMessages?.[0]?.message || getCoachAdvice(globalData)}"</p></div>
+          <div class="card"><div style="font-weight:bold;">🇯🇵 Japonais</div>
+            <div class="japanese-selector">
+              <span data-jp-type="hiragana" class="japanese-type ${globalData.settings.japaneseType === 'hiragana' ? 'active' : ''}">ひらがな</span>
+              <span data-jp-type="katakana" class="japanese-type ${globalData.settings.japaneseType === 'katakana' ? 'active' : ''}">カタカナ</span>
+              <span data-jp-type="kanji" class="japanese-type ${globalData.settings.japaneseType === 'kanji' ? 'active' : ''}">漢字</span>
+            </div>
+            <div class="japanese-word ${!showA ? 'japanese-hidden' : ''}" onclick="toggleJapaneseAnswer()">${currentJapaneseLesson?.jp || '???'}</div>
+            ${showA ? `<div style="font-size:12px;text-align:center;">${currentJapaneseLesson?.reading} → ${currentJapaneseLesson?.meaning}</div>` : '<div style="font-size:11px;text-align:center;cursor:pointer;">👆 Clique pour révéler</div>'}
+            <button class="btn btn-primary btn-sm" data-action="new-japanese" style="margin-top:10px;width:100%;">🔄 Mot suivant</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRunContent(accent, totalKm, paceDisplay) {
+      const best = globalData.runs.length ? Math.max(...globalData.runs.map(r => r.distance)) : 0;
+      const percent = Math.min((totalKm / globalData.settings.runGoal) * 100, 100);
+      return `
+        <div><h2 style="font-family:'Cinzel';font-size:24px;color:#ff8c42;">🏃 Run Logger</h2><p>${totalKm.toFixed(1)} km · ${globalData.runs.length} runs</p>
+        <div class="card"><div style="display:flex;justify-content:space-between;"><span>🎯 Objectif ${globalData.settings.runGoal} km</span><span>${percent.toFixed(0)}%</span></div><div style="height:6px;background:#0a0314;margin:8px 0;"><div style="width:${percent}%;height:100%;background:#ff8c42;"></div></div><div>${totalKm.toFixed(1)} / ${globalData.settings.runGoal} km</div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-value" style="color:#ff8c42;">${globalData.runs.length}</div><div class="stat-label">Runs</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#ff8c42;">${totalKm.toFixed(1)}</div><div class="stat-label">km</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#ff8c42;">${paceDisplay}</div><div class="stat-label">Allure</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#ff8c42;">${best}</div><div class="stat-label">Record</div></div>
+        </div>
+        <div class="card"><div style="font-weight:bold;">📈 Progression</div>${renderRunChart(globalData.runs)}</div>
+        <div class="card"><div style="font-weight:bold;">➕ Ajouter un run</div>
+          <input type="date" id="run-date" value="${today()}"><input type="number" id="run-distance" placeholder="Distance (km)"><input type="number" id="run-duration" placeholder="Durée (minutes)"><input type="text" id="run-notes" placeholder="Notes">
+          <button class="btn btn-primary btn-full" data-action="add-run">🏃 Enregistrer</button>
+        </div>
+        <div class="card"><div style="font-weight:bold;">📜 Historique</div>
+          ${globalData.runs.length === 0 ? '<div style="text-align:center;padding:20px;">Aucun run</div>' : globalData.runs.map(r => `<div class="history-item"><span style="min-width:80px;">${r.date}</span><div style="flex:1;"><span style="color:#ff8c42;font-weight:bold;">${r.distance} km</span> <span style="font-size:11px;">${r.duration} min (${formatPace(r.distance, r.duration)} min/km)</span>${r.notes ? `<div style="font-size:10px;">${r.notes}</div>` : ''}</div><button class="btn btn-danger btn-sm" data-action="delete-run" data-id="${r.id}">🗑️</button></div>`).join('')}
+        </div></div>
+      `;
+    }
+
+    function renderStreamContent(accent) {
+      const totalMin = globalData.streams.reduce((a, s) => a + s.duration, 0);
+      const totalH = (totalMin / 60).toFixed(1);
+      const avgV = globalData.streams.length ? Math.round(globalData.streams.reduce((a, s) => a + s.viewers, 0) / globalData.streams.length) : 0;
+      const bestV = globalData.streams.length ? Math.max(...globalData.streams.map(s => s.viewers)) : 0;
+      const percent = Math.min((globalData.settings.currentFollowers / globalData.settings.followerGoal) * 100, 100);
+      const gameCount = {};
+      globalData.streams.forEach(s => { gameCount[s.game] = (gameCount[s.game] || 0) + 1; });
+      const games = Object.keys(gameCount);
+      return `
+        <div><h2 style="font-family:'Cinzel';font-size:24px;color:#a855f7;">🎮 Stream Tracker</h2><p>${globalData.streams.length} streams · ${totalH}h</p>
+        <div class="card"><div style="display:flex;justify-content:space-between;"><span>🎯 Objectif ${globalData.settings.followerGoal} followers</span><span>${percent.toFixed(0)}%</span></div><div style="height:6px;background:#0a0314;margin:8px 0;"><div style="width:${percent}%;height:100%;background:#a855f7;"></div></div><div>${globalData.settings.currentFollowers} / ${globalData.settings.followerGoal}</div></div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-value" style="color:#a855f7;">${globalData.streams.length}</div><div class="stat-label">Streams</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#a855f7;">${totalH}h</div><div class="stat-label">Heures</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#a855f7;">${avgV}</div><div class="stat-label">Viewers</div></div>
+          <div class="stat-card"><div class="stat-value" style="color:#a855f7;">${bestV}</div><div class="stat-label">Record</div></div>
+        </div>
+        <div class="card"><div style="font-weight:bold;">📈 Progression</div>${renderStreamChart(globalData.streams)}</div>
+        <div class="card"><div style="font-weight:bold;">🎮 Jeux streamés</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${games.map(g => `<span class="badge" style="background:#a855f718;">${g} (${gameCount[g]}x)</span>`).join('') || 'Aucun jeu'}</div></div>
+        <div class="card"><div style="font-weight:bold;">➕ Ajouter un stream</div>
+          <input type="date" id="stream-date" value="${today()}">
+          <div class="position-relative"><input type="text" id="stream-game" placeholder="Jeu" oninput="handleGameInput(this.value)"><div id="stream-suggestions" class="suggestions-list" style="display:none;"></div></div>
+          <input type="number" id="stream-duration" placeholder="Durée (minutes)"><input type="number" id="stream-viewers" placeholder="Viewers max"><input type="text" id="stream-notes" placeholder="Notes">
+          <button class="btn btn-primary btn-full" data-action="add-stream">🎮 Enregistrer</button>
+        </div>
+        <div class="card"><div style="font-weight:bold;">📜 Historique</div>
+          ${globalData.streams.length === 0 ? '<div style="text-align:center;padding:20px;">Aucun stream</div>' : globalData.streams.map(s => `<div class="history-item"><span style="min-width:80px;">${s.date}</span><div style="flex:1;"><span style="color:#a855f7;font-weight:bold;">${s.game}</span><div style="font-size:11px;">${s.duration} min · ${s.viewers} viewers</div>${s.notes ? `<div style="font-size:10px;">${s.notes}</div>` : ''}</div><button class="btn btn-danger btn-sm" data-action="delete-stream" data-id="${s.id}">🗑️</button></div>`).join('')}
+        </div></div>
+      `;
+    }
+
+    function renderGamesContent(accent) {
+      const display = lastPickedGame || { name: '🎲 Clique pour jouer' };
+      return `
+        <div><h2 style="font-family:'Cinzel';font-size:24px;color:${accent};">🎲 Jeu Aléatoire</h2><p>Plus de 500 000 jeux disponibles</p>
+        <div class="slot-machine"><div class="slot-reel" id="slot-reel"><div class="game-name" style="color:${accent};">${display.name}</div>${display.image ? `<img src="${display.image}" class="game-img" id="game-img">` : '<div style="font-size:60px;margin-top:15px;">🎮</div>'}</div><button class="btn btn-primary" data-action="spin-game" style="font-size:18px;padding:12px 30px;">🎲 LANCER</button></div>
+        <div class="card"><div style="font-weight:bold;">📜 Historique (${globalData.gameHistory?.length || 0})</div>
+          ${!globalData.gameHistory?.length ? '<div style="text-align:center;padding:20px;">Aucun jeu</div>' : globalData.gameHistory.slice(0, 30).map((g, i) => `<div class="history-item">${g.image ? `<img src="${g.image}" class="game-image">` : '<div style="font-size:30px;width:50px;">🎮</div>'}<div style="flex:1;"><span style="font-weight:bold;">${g.name}</span><div style="font-size:10px;">${g.date}</div></div><button class="btn btn-primary btn-sm" data-action="view-game" data-idx="${i}">👁️ Voir</button><button class="btn btn-danger btn-sm" data-action="delete-game" data-idx="${i}">🗑️</button></div>`).join('')}
+        </div></div>
+      `;
+    }
+
+    function renderLiveContent(accent) {
+      const rewardList = getRewardList();
+      return `
+        <div>
+          <h2 style="font-family:'Cinzel';font-size:24px;color:${accent};">🎬 Dashboard Live</h2>
+          <p style="margin-bottom: 20px;">Interactions pour le stream - La roue reste affichée jusqu'au prochain lancer</p>
+          
+          <!-- Roue de la Fortune -->
+          <div class="card" style="text-align: center;">
+            <div style="font-weight: bold; margin-bottom: 15px;">🎡 Roue de la Fortune</div>
+            <div id="wheel-result-display" style="background: linear-gradient(135deg, #1a0a30, #0a0418); border-radius: 20px; padding: 30px; margin-bottom: 20px; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              ${currentReward ? `
+                <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+                <div style="font-size: 28px; font-weight: bold; color: #ffd700;">${currentReward.name}</div>
+                <div style="font-size: 14px; margin-top: 10px; color: #aa88aa;">Défi en cours - relance la roue pour un nouveau défi !</div>
+              ` : `
+                <div style="font-size: 48px; margin-bottom: 10px;">🎡</div>
+                <div style="font-size: 16px; color: #886699;">Clique sur "Lancer" pour faire tourner la roue !</div>
+              `}
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-primary" data-action="spin-wheel" style="flex: 2;">🎡 LANCER LA ROUE</button>
+              ${currentReward ? `<button class="btn btn-ghost" data-action="reset-wheel" style="flex: 1;">🔄 Réinitialiser</button>` : ''}
+            </div>
+          </div>
+          
+          <!-- Personnalisation de la roue -->
+          <div class="card">
+            <div style="font-weight: bold; margin-bottom: 15px;">⚙️ Personnaliser la roue</div>
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+              <input type="text" id="new-reward" placeholder="Nouvelle récompense/défi..." style="flex: 3; margin-bottom: 0;">
+              <button class="btn btn-success" data-action="add-reward" style="flex: 1;">➕ Ajouter</button>
+            </div>
+            <div class="reward-list" style="max-height: 250px; overflow-y: auto;">
+              ${rewardList.map((r, i) => `
+                <div class="history-item" style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>${r.name}</span>
+                  <button class="btn btn-danger btn-sm" data-action="remove-reward" data-idx="${i}">🗑️</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          
+          <!-- Défi actuel pour overlay OBS -->
+          <div class="card" style="border: 2px solid ${accent}44;">
+            <div style="font-weight: bold; margin-bottom: 10px;">📺 Défi actuel (pour overlay OBS)</div>
+            <div style="text-align: center; padding: 20px; font-size: 24px; font-weight: bold; color: ${accent};">
+              ${currentReward ? currentReward.name : 'Lance la roue !'}
+            </div>
+            <div style="font-size: 11px; color: #886699; text-align: center; margin-top: 10px;">
+              💡 Astuce : Ouvre cette page dans OBS comme source navigateur et actualise pour voir le défi
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChallengesContent(accent) {
+      const totalRun = globalData.runs.reduce((a, r) => a + r.distance, 0);
+      const runDays = new Set(globalData.runs.map(r => r.date)).size;
+      const totalStreamMin = globalData.streams.reduce((a, s) => a + s.duration, 0);
+      const uniqueGames = new Set(globalData.streams.map(s => s.game)).size;
+      const daily = globalData.companion.totalDaysLoggedIn || 0;
+      return `<div><h2 style="font-family:'Cinzel';font-size:24px;color:${accent};">🏆 Défis Hebdomadaires</h2><p>Semaine ${getWeekNumber()} · Gagne de l'XP bonus !</p>${CHALLENGES.map(c => { let cur = 0; switch(c.type) { case 'run': cur = totalRun; break; case 'run_days': cur = runDays; break; case 'stream_duration': cur = totalStreamMin; break; case 'stream_games': cur = uniqueGames; break; case 'daily': cur = daily; break; } const p = Math.min((cur / c.target) * 100, 100); const comp = globalData.completedChallenges.includes(c.id); return `<div class="challenge-card ${comp ? 'challenge-completed' : ''}"><div style="display:flex;justify-content:space-between;"><span>${c.name}</span><span style="color:#ffd700;">+${c.xp} XP</span></div><div style="height:6px;background:#0a0314;"><div style="width:${p}%;height:100%;background:${comp ? '#10b981' : '#ffd700'};"></div></div><div style="margin-top:5px;"><span>${cur} / ${c.target} ${c.unit}</span>${comp ? ' ✅' : ''}</div></div>`; }).join('')}</div>`;
+    }
+
+    function renderCalendarContent(accent, days, month, year) {
+      const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+      const dayNames = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+      return `<div><h2 style="font-family:'Cinzel';font-size:24px;color:${accent};">📅 Calendrier</h2><p>${monthNames[month]} ${year}</p><div class="card"><div class="calendar-grid">${dayNames.map(d => `<div style="text-align:center;">${d}</div>`).join('')}${days.map(d => d === null ? '<div></div>' : `<div class="calendar-day ${d.hasRun ? 'has-run' : ''} ${d.hasStream ? 'has-stream' : ''} ${d.isToday ? 'today' : ''}"><span>${d.day}</span>${d.hasRun ? '<span style="font-size:8px;">🏃</span>' : ''}${d.hasStream ? '<span style="font-size:8px;">🎮</span>' : ''}</div>`).join('')}</div><div style="margin-top:15px;display:flex;gap:15px;justify-content:center;"><span>🏃 = Run</span><span>🎮 = Stream</span><span>⭐ = Aujourd\'hui</span></div></div><div class="card"><div style="font-weight:bold;">📊 Résumé</div><div class="stat-detail"><span>🏃 Jours de course</span><span>${days.filter(d => d && d.hasRun).length}</span></div><div class="stat-detail"><span>🎮 Jours de stream</span><span>${days.filter(d => d && d.hasStream).length}</span></div></div></div>`;
+    }
+
+    function renderStatsContent(accent) {
+      const totalKm = globalData.runs.reduce((a, r) => a + r.distance, 0);
+      const bestRun = globalData.runs.length ? Math.max(...globalData.runs.map(r => r.distance)) : 0;
+      const avgRun = globalData.runs.length ? (totalKm / globalData.runs.length).toFixed(1) : 0;
+      const streamH = (globalData.streams.reduce((a, s) => a + s.duration, 0) / 60).toFixed(1);
+      const avgV = globalData.streams.length ? Math.round(globalData.streams.reduce((a, s) => a + s.viewers, 0) / globalData.streams.length) : 0;
+      const bestV = globalData.streams.length ? Math.max(...globalData.streams.map(s => s.viewers)) : 0;
+      const bestGame = globalData.streams.length ? globalData.streams.reduce((a, s) => a.viewers > s.viewers ? a : s).game : '—';
+      const uniqueGames = new Set(globalData.streams.map(s => s.game)).size;
+      const pace = totalKm > 0 ? (globalData.runs.reduce((a, r) => a + r.duration, 0) / totalKm).toFixed(1) : '—';
+      return `<div><h2 style="font-family:'Cinzel';font-size:24px;color:${accent};">📊 Statistiques Avancées</h2><div class="card"><div style="font-weight:bold;">🏃 Running</div><div class="stat-detail"><span>📈 Total km</span><span>${totalKm.toFixed(1)} km</span></div><div class="stat-detail"><span>🏆 Meilleure distance</span><span>${bestRun} km</span></div><div class="stat-detail"><span>📊 Moyenne/run</span><span>${avgRun} km</span></div><div class="stat-detail"><span>⏱️ Allure moyenne</span><span>${pace !== '—' ? pace + ' min/km' : '—'}</span></div></div><div class="card"><div style="font-weight:bold;">🎮 Streaming</div><div class="stat-detail"><span>📈 Total streams</span><span>${globalData.streams.length}</span></div><div class="stat-detail"><span>⏱️ Heures totales</span><span>${streamH}h</span></div><div class="stat-detail"><span>👁️ Moyenne viewers</span><span>${avgV}</span></div><div class="stat-detail"><span>🏆 Record viewers</span><span>${bestV}</span></div><div class="stat-detail"><span>🎮 Jeux différents</span><span>${uniqueGames}</span></div><div class="stat-detail"><span>⭐ Meilleur jeu</span><span>${bestGame}</span></div></div></div>`;
+    }
+
+    function renderSettingsContent(accent) {
+      return `<div><h2 style="font-family:'Cinzel';font-size:24px;color:${accent};">⚙️ Paramètres</h2>
+        <div class="card"><div style="font-weight:bold;">👤 Profil</div><input type="text" id="set-username" value="${globalData.settings.username || ''}" placeholder="Pseudo"><input type="text" id="set-realname" value="${globalData.settings.realName || ''}" placeholder="Prénom"><input type="text" id="set-companion" value="${globalData.settings.companionName || ''}" placeholder="Compagnon"><input type="text" id="set-twitch" value="${globalData.settings.twitchUrl || ''}" placeholder="Twitch"></div>
+        <div class="card"><div style="font-weight:bold;">🎯 Objectifs</div><input type="number" id="set-followers" value="${globalData.settings.currentFollowers || 0}" placeholder="Followers"><input type="number" id="set-followerGoal" value="${globalData.settings.followerGoal || 500}" placeholder="Objectif followers"><input type="number" id="set-runGoal" value="${globalData.settings.runGoal || 100}" placeholder="Objectif km"></div>
+        <div class="card"><div style="font-weight:bold;">🎨 Couleur</div><div style="display:flex;gap:10px;">${['#ff2d78', '#ff6b35', '#a855f7', '#06b6d4', '#10b981', '#f59e0b'].map(c => `<div data-color="${c}" class="color-opt" style="width:40px;height:40px;border-radius:50%;background:${c};cursor:pointer;border:${accent === c ? '2px solid white' : '2px solid transparent'};"></div>`).join('')}</div></div>
+        <div class="card"><div style="font-weight:bold;">💾 Sauvegarde</div><div style="display:flex;gap:10px;"><button class="btn btn-primary" data-action="export-data" style="flex:1;">📤 Exporter</button><button class="btn btn-ghost" id="import-btn" style="flex:1;">📥 Importer</button><input type="file" id="import-file" style="display:none;"></div></div>
+        <button class="btn btn-primary btn-full" data-action="save-settings">💾 Sauvegarder</button>
+        <button class="btn btn-danger btn-full" data-action="reset-all">⚠️ Tout réinitialiser</button></div>`;
+    }
+
+    function renderGameModal(accent, game) {
+      return `<div class="modal" id="game-modal"><div class="modal-content"><div style="font-size:24px;font-weight:bold;color:${accent};">${game.name}</div>${game.image ? `<img src="${game.image}" class="modal-img">` : '<div style="font-size:80px;margin:20px;">🎮</div>'}<div style="font-size:12px;">Proposé le ${game.date}</div><a href="https://store.steampowered.com/search/?term=${encodeURIComponent(game.name)}" target="_blank" class="btn btn-primary" style="width:100%;margin:10px 0;">🎮 Voir sur Steam</a><button class="btn btn-danger" id="close-modal">Fermer</button></div></div>`;
+    }
+
+    // ==================== RENDU PRINCIPAL ====================
+    function renderApp() {
+      const app = document.getElementById('app');
+      if (!app) return;
+
+      const accent = globalData.settings.accentColor;
+      const totalKm = globalData.runs.reduce((a, r) => a + r.distance, 0);
+      const xpPercent = Math.min((globalData.companion.xp / globalData.companion.xpToNext) * 100, 100);
+      const dailyBonusDone = globalData.companion.lastLogin === new Date().toDateString();
+      const pace = totalKm > 0 ? (globalData.runs.reduce((a, r) => a + r.duration, 0) / totalKm).toFixed(1) : '—';
+      const paceDisplay = pace !== '—' ? `${pace} min/km` : '—';
+      const { days, month, year } = buildCalendar(globalData);
+
+      if (isMobile) {
+        app.innerHTML = `<div style="padding-bottom:80px;"><div class="mobile-header"><div><div style="font-family:'Cinzel';font-size:18px;color:${accent};">${(globalData.settings.username || 'Siskath').toUpperCase()}</div><div style="font-size:10px;">${globalData.settings.realName || ''}</div></div><div class="badge">Niv.${globalData.companion.level}</div></div>
+        <div class="mobile-nav"><button data-tab="run" class="${currentTab === 'run' ? 'active' : ''}">🏃 RUN</button><button data-tab="stream" class="${currentTab === 'stream' ? 'active' : ''}">🎮 STREAM</button><button data-tab="games" class="${currentTab === 'games' ? 'active' : ''}">🎲 JEUX</button><button data-tab="live" class="${currentTab === 'live' ? 'active' : ''}">🎬 LIVE</button><button data-tab="challenges" class="${currentTab === 'challenges' ? 'active' : ''}">🏆</button><button data-tab="calendar" class="${currentTab === 'calendar' ? 'active' : ''}>📅</button><button data-tab="stats" class="${currentTab === 'stats' ? 'active' : ''}>📊</button><button data-tab="settings" class="${currentTab === 'settings' ? 'active' : ''}>⚙️</button></div>
+        <div style="padding:16px;"><div class="card"><div style="display:flex;gap:15px;"><div style="font-size:48px;">${getMoodEmoji(globalData.companion)}</div><div style="flex:1;"><div style="display:flex;justify-content:space-between;"><span>${globalData.settings.companionName || 'Compagnon'}</span><span class="badge">Niv.${globalData.companion.level}</span></div><p style="font-size:11px;">${globalData.companion.lastMessage}</p><div class="xp-bar"><div class="xp-fill" style="width:${xpPercent}%;"></div></div><div>${globalData.companion.xp}/${globalData.companion.xpToNext}</div>${!dailyBonusDone ? `<button class="btn btn-primary btn-sm" data-action="bonus" style="width:100%;margin-top:8px;">🎁 Bonus +15 XP</button>` : '<span>✅ Bonus réclamé</span>'}</div></div></div>
+        <div class="card"><div style="font-weight:bold;">🤖 IA Coach</div><p>"${globalData.coachMessages?.[0]?.message || getCoachAdvice(globalData)}"</p></div>
+        ${currentTab === 'run' ? renderRunContent(accent, totalKm, paceDisplay) : ''}
+        ${currentTab === 'stream' ? renderStreamContent(accent) : ''}
+        ${currentTab === 'games' ? renderGamesContent(accent) : ''}
+        ${currentTab === 'live' ? renderLiveContent(accent) : ''}
+        ${currentTab === 'challenges' ? renderChallengesContent(accent) : ''}
+        ${currentTab === 'calendar' ? renderCalendarContent(accent, days, month, year) : ''}
+        ${currentTab === 'stats' ? renderStatsContent(accent) : ''}
+        ${currentTab === 'settings' ? renderSettingsContent(accent) : ''}
+        </div><div class="mobile-bottom-nav"><button data-tab="run"><span class="nav-icon">🏃</span><span class="nav-label">Run</span></button><button data-tab="stream"><span class="nav-icon">🎮</span><span class="nav-label">Stream</span></button><button data-tab="games"><span class="nav-icon">🎲</span><span class="nav-label">Jeux</span></button><button data-tab="live"><span class="nav-icon">🎬</span><span class="nav-label">Live</span></button><button data-tab="settings"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></button></div></div>
+        <div class="footer">Siskath Dashboard v${APP_VERSION}</div>${toastMsg ? `<div class="toast">${toastMsg}</div>` : ''}${selectedGameDetail ? renderGameModal(accent, selectedGameDetail) : ''}`;
+      } else {
+        app.innerHTML = `<div class="desktop-layout">${renderSidebar(accent, xpPercent, dailyBonusDone)}<div class="main-content"><div style="display:flex;gap:5px;margin-bottom:20px;border-bottom:1px solid #2a1530;flex-wrap:wrap;"><button data-tab="run" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'run' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'run' ? accent : 'transparent'};">🏃 Run</button><button data-tab="stream" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'stream' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'stream' ? accent : 'transparent'};">🎮 Stream</button><button data-tab="games" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'games' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'games' ? accent : 'transparent'};">🎲 Jeux</button><button data-tab="live" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'live' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'live' ? accent : 'transparent'};">🎬 Live</button><button data-tab="challenges" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'challenges' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'challenges' ? accent : 'transparent'};">🏆 Défis</button><button data-tab="calendar" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'calendar' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'calendar' ? accent : 'transparent'};">📅 Calendrier</button><button data-tab="stats" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'stats' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'stats' ? accent : 'transparent'};">📊 Stats</button><button data-tab="settings" style="padding:10px 24px;background:none;border:none;color:${currentTab === 'settings' ? accent : '#886699'};border-bottom:2px solid ${currentTab === 'settings' ? accent : 'transparent'};">⚙️ Paramètres</button></div>
+        ${currentTab === 'run' ? renderRunContent(accent, totalKm, paceDisplay) : ''}
+        ${currentTab === 'stream' ? renderStreamContent(accent) : ''}
+        ${currentTab === 'games' ? renderGamesContent(accent) : ''}
+        ${currentTab === 'live' ? renderLiveContent(accent) : ''}
+        ${currentTab === 'challenges' ? renderChallengesContent(accent) : ''}
+        ${currentTab === 'calendar' ? renderCalendarContent(accent, days, month, year) : ''}
+        ${currentTab === 'stats' ? renderStatsContent(accent) : ''}
+        ${currentTab === 'settings' ? renderSettingsContent(accent) : ''}
+        </div></div><div class="footer">Siskath Dashboard v${APP_VERSION} (${APP_BUILD_DATE}) · ${gameCache.length} jeux en cache · Roue personnalisable</div>${toastMsg ? `<div class="toast">${toastMsg}</div>` : ''}${selectedGameDetail ? renderGameModal(accent, selectedGameDetail) : ''}`;
+      }
+      attachEvents();
+    }
+
+    // ==================== ÉVÉNEMENTS ====================
+    function attachEvents() {
+      document.querySelectorAll('[data-tab]').forEach(el => el.addEventListener('click', (e) => { currentTab = e.currentTarget.getAttribute('data-tab'); renderApp(); }));
+      document.querySelectorAll('[data-action="bonus"]').forEach(el => el.addEventListener('click', () => { if (globalData.companion.lastLogin === new Date().toDateString()) { showToast('Bonus déjà réclamé !'); return; } const newComp = addXP({ ...globalData.companion, lastLogin: new Date().toDateString() }, 15, 'energy'); updateGlobalData({ ...globalData, companion: newComp }); showToast('🎁 +15 XP !'); }));
+      document.querySelectorAll('[data-action="add-run"]').forEach(el => el.addEventListener('click', () => { const d = document.getElementById('run-distance')?.value, dur = document.getElementById('run-duration')?.value; if (!d || !dur) { showToast('Remplis distance et durée'); return; } const run = { id: Date.now(), date: document.getElementById('run-date')?.value || today(), distance: parseFloat(d), duration: parseInt(dur), notes: document.getElementById('run-notes')?.value || '' }; const newComp = addXP({ ...globalData.companion }, 20, 'endurance'); let newData = { ...globalData, runs: [run, ...globalData.runs], companion: newComp }; newData = checkChallengeCompletion(newData); updateGlobalData(newData); showToast('🏃 Run ajouté ! +20 Endurance'); }));
+      document.querySelectorAll('[data-action="delete-run"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(e.currentTarget.getAttribute('data-id')); updateGlobalData({ ...globalData, runs: globalData.runs.filter(r => r.id !== id) }); showToast('Run supprimé'); }));
+      document.querySelectorAll('[data-action="add-stream"]').forEach(el => el.addEventListener('click', () => { const game = document.getElementById('stream-game')?.value, dur = document.getElementById('stream-duration')?.value; if (!game || !dur) { showToast('Remplis jeu et durée'); return; } const stream = { id: Date.now(), date: document.getElementById('stream-date')?.value || today(), game: game, duration: parseInt(dur), viewers: parseInt(document.getElementById('stream-viewers')?.value) || 0, notes: document.getElementById('stream-notes')?.value || '' }; const newComp = addXP({ ...globalData.companion }, 25, 'charisma'); let newData = { ...globalData, streams: [stream, ...globalData.streams], companion: newComp }; newData = checkChallengeCompletion(newData); updateGlobalData(newData); showToast('🎮 Stream ajouté ! +25 Charisme'); const div = document.getElementById('stream-suggestions'); if (div) div.style.display = 'none'; }));
+      document.querySelectorAll('[data-action="delete-stream"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); const id = parseInt(e.currentTarget.getAttribute('data-id')); updateGlobalData({ ...globalData, streams: globalData.streams.filter(s => s.id !== id) }); showToast('Stream supprimé'); }));
+      document.querySelectorAll('[data-action="spin-game"]').forEach(el => el.addEventListener('click', () => spinGame()));
+      document.querySelectorAll('[data-action="view-game"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); const idx = parseInt(e.currentTarget.getAttribute('data-idx')); selectedGameDetail = globalData.gameHistory[idx]; renderApp(); }));
+      document.querySelectorAll('[data-action="delete-game"]').forEach(el => el.addEventListener('click', (e) => { e.stopPropagation(); const idx = parseInt(e.currentTarget.getAttribute('data-idx')); updateGlobalData({ ...globalData, gameHistory: globalData.gameHistory.filter((_, i) => i !== idx) }); showToast('Jeu supprimé'); }));
+      document.querySelectorAll('[data-action="save-settings"]').forEach(el => el.addEventListener('click', () => { const newSettings = { ...globalData.settings, username: document.getElementById('set-username')?.value, realName: document.getElementById('set-realname')?.value, companionName: document.getElementById('set-companion')?.value, twitchUrl: document.getElementById('set-twitch')?.value, currentFollowers: parseInt(document.getElementById('set-followers')?.value) || 0, followerGoal: parseInt(document.getElementById('set-followerGoal')?.value) || 500, runGoal: parseInt(document.getElementById('set-runGoal')?.value) || 100 }; updateGlobalData({ ...globalData, settings: newSettings }); showToast('Paramètres sauvegardés'); }));
+      document.querySelectorAll('[data-action="export-data"]').forEach(el => el.addEventListener('click', () => exportData()));
+      
+      // LIVE events
+      document.querySelectorAll('[data-action="spin-wheel"]').forEach(el => el.addEventListener('click', () => spinWheel()));
+      document.querySelectorAll('[data-action="reset-wheel"]').forEach(el => el.addEventListener('click', () => resetWheelResult()));
+      document.querySelectorAll('[data-action="add-reward"]').forEach(el => el.addEventListener('click', () => addReward()));
+      document.querySelectorAll('[data-action="remove-reward"]').forEach(el => {
+        el.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute('data-idx'));
+          removeReward(idx);
+        });
+      });
+      
+      const importBtn = document.getElementById('import-btn'), importFile = document.getElementById('import-file');
+      if (importBtn && importFile) { importBtn.addEventListener('click', () => importFile.click()); importFile.addEventListener('change', (e) => { if (e.target.files[0]) importData(e.target.files[0]); }); }
+      document.querySelectorAll('.color-opt').forEach(el => el.addEventListener('click', (e) => { const color = e.currentTarget.getAttribute('data-color'); updateGlobalData({ ...globalData, settings: { ...globalData.settings, accentColor: color } }); }));
+      document.querySelectorAll('[data-jp-type]').forEach(el => el.addEventListener('click', (e) => { const type = e.currentTarget.getAttribute('data-jp-type'); updateGlobalData({ ...globalData, settings: { ...globalData.settings, japaneseType: type } }); currentJapaneseLesson = getRandomJapanese(type, globalData.settings.showJapaneseAnswer); renderApp(); }));
+      document.querySelectorAll('[data-action="new-japanese"]').forEach(el => el.addEventListener('click', () => { currentJapaneseLesson = getRandomJapanese(globalData.settings.japaneseType, globalData.settings.showJapaneseAnswer); renderApp(); }));
+      document.querySelectorAll('[data-action="reset-all"]').forEach(el => el.addEventListener('click', () => { if (confirm('⚠️ TOUT réinitialiser ?')) { updateGlobalData(JSON.parse(JSON.stringify(DEFAULT_DATA))); lastPickedGame = null; currentJapaneseLesson = getRandomJapanese('kanji', false); showToast('Réinitialisé'); } }));
+      const closeBtn = document.getElementById('close-modal');
+      if (closeBtn) closeBtn.addEventListener('click', () => { selectedGameDetail = null; renderApp(); });
+      const modal = document.getElementById('game-modal');
+      if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) { selectedGameDetail = null; renderApp(); } });
+    }
+
+    // ==================== PREMIÈRE UTILISATION ====================
+    function isFirstUse() { return !localStorage.getItem(FIRST_USE_KEY); }
+    function markFirstUseDone() { localStorage.setItem(FIRST_USE_KEY, 'done'); }
+    function renderWelcomeModal() {
+      return `<div class="modal" id="welcome-modal" style="z-index:2000;"><div class="modal-content" style="max-width:450px;"><div style="font-size:64px;">🌸</div><h2 style="font-family:'Cinzel';font-size:24px;color:#ff2d78;">Bienvenue !</h2><p>Je suis ton compagnon virtuel. Personnalisons ton espace.</p><label>👤 Pseudo</label><input type="text" id="welcome-username" value="Siskath"><label>💖 Ton prénom</label><input type="text" id="welcome-realname" value="Nael"><label>🐉 Nom du compagnon</label><input type="text" id="welcome-companion" value="Siskath"><label>🎮 URL Twitch</label><input type="text" id="welcome-twitch" value="https://twitch.tv/siskath"><button class="btn btn-primary" id="welcome-start" style="width:100%;margin-top:20px;">✨ Commencer !</button></div></div>`;
+    }
+    function initWelcome() {
+      const btn = document.getElementById('welcome-start');
+      if (btn) btn.addEventListener('click', () => {
+        const newData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        newData.settings.username = document.getElementById('welcome-username')?.value || 'Siskath';
+        newData.settings.realName = document.getElementById('welcome-realname')?.value || 'Nael';
+        newData.settings.companionName = document.getElementById('welcome-companion')?.value || 'Siskath';
+        newData.settings.twitchUrl = document.getElementById('welcome-twitch')?.value || 'https://twitch.tv/siskath';
+        newData.companion.lastLogin = new Date().toDateString();
+        newData.companion.totalDaysLoggedIn = 1;
+        updateGlobalData(newData);
+        markFirstUseDone();
+        renderApp();
+      });
+    }
+
+    // ==================== INIT ====================
+    window.toggleJapaneseAnswer = function() {
+      const newVal = !globalData.settings.showJapaneseAnswer;
+      updateGlobalData({ ...globalData, settings: { ...globalData.settings, showJapaneseAnswer: newVal } });
+      if (currentJapaneseLesson) currentJapaneseLesson = { ...currentJapaneseLesson, showAnswer: newVal };
+      renderApp();
+    };
+
+    async function init() {
+      if (isFirstUse()) {
+        document.getElementById('app').innerHTML = renderWelcomeModal();
+        initWelcome();
+        return;
+      }
+      globalData = loadData();
+      globalData = checkChallengeCompletion(globalData);
+      currentJapaneseLesson = getRandomJapanese(globalData.settings.japaneseType, globalData.settings.showJapaneseAnswer);
+      fetchAllGames();
+      window.addEventListener('resize', () => { const newMobile = window.innerWidth < 768; if (newMobile !== isMobile) { isMobile = newMobile; renderApp(); } });
+      renderApp();
+    }
+    init();
+  </script>
+</body>
+</html>
