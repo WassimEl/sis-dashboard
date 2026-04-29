@@ -14,7 +14,7 @@ Dashboard interactif pour streameuse avec compagnon virtuel, suivi de runs et st
 
 ## 🚀 Démo
 
-[Lien vers ton déploiement Vercel]
+[[Lien vers le déploiement Vercel]](https://sis-dashboard-silk.vercel.app/)
 
 ## 📦 Installation locale
 
